@@ -1,0 +1,9 @@
+
+{
+  "suggest.snippetIndicator": " ⮞ ",
+  "snippets.ultisnips.enable": false,
+  "snippets.extends": {
+    "cpp": ["lua"]
+  }
+}
+

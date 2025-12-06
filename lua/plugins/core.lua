@@ -1,76 +1,238 @@
 -- ~/.config/nvim/lua/plugins/core.lua
 return {
-  -- A nice theme to start with
+
+  -----------------------------------------------------------------------
+  -- 🌈 THEME: Catppuccin (Black Background)
+  -----------------------------------------------------------------------
+
+{
+  "folke/tokyonight.nvim",
+  lazy = false,
+  priority = 1000,
+  config = function()
+    require("tokyonight").setup({
+      style = "night",   -- night / storm / moon / day
+      transparent = false,
+
+      -- These let us override UI elements
+      on_colors = function(colors)
+        -- keep original syntax colors (do nothing)
+        return colors
+      end,
+
+      on_highlights = function(hl, colors)
+        --------------------------------------------------------------------
+        -- FORCE FULL BLACK UI WHILE KEEPING TOKYONIGHT SYNTAX
+        --------------------------------------------------------------------
+        hl.Normal = { bg = "#000000", fg = colors.fg }
+        hl.NormalNC = { bg = "#000000", fg = colors.fg }
+
+        hl.SignColumn = { bg = "#000000" }
+        hl.LineNr = { bg = "#000000", fg = colors.dark5 }
+        hl.CursorLine = { bg = "#000000" }
+        hl.CursorLineNr = { bg = "#000000", fg = colors.blue }
+
+        hl.StatusLine = { bg = "#000000", fg = colors.blue }
+        hl.TabLineFill = { bg = "#000000" }
+        hl.WinSeparator = { bg = "#000000", fg = "#222222" }
+
+        -- Diagnostics background clean
+        hl.DiagnosticVirtualTextError = { bg = "#000000", fg = colors.red }
+        hl.DiagnosticVirtualTextWarn  = { bg = "#000000", fg = colors.yellow }
+        hl.DiagnosticVirtualTextInfo  = { bg = "#000000", fg = colors.blue }
+        hl.DiagnosticVirtualTextHint  = { bg = "#000000", fg = colors.green }
+      end,
+    })
+
+    -- APPLY TOKYONIGHT
+    vim.cmd.colorscheme("tokyonight")
+  end,
+},
+
+  -----------------------------------------------------------------------
+  -- 🔍 TELESCOPE (Fuzzy Finder)
+  -----------------------------------------------------------------------
   {
-    "folke/tokyonight.nvim",
-    lazy = false,
-    priority = 1000,
+    "nvim-telescope/telescope.nvim",
+    branch = "0.1.x",
+    dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-		require("tokyonight").setup({
-  style = "night", -- the darkest style
-  transparent = false,
-  on_colors = function(colors)
-    colors.bg = "#000000"      -- main bg
-    colors.bg_dark = "#000000" -- some sidebars/popups
-  end,
-  on_highlights = function(hl, colors)
-    hl.Normal = { bg = "#000000" }
-    hl.NormalNC = { bg = "#000000" }
-    hl.SignColumn = { bg = "#000000" }
-    hl.StatusLine = { bg = "#000000" }
-    hl.WinSeparator = { bg = "#000000" }
-    -- Un-comment to darken more UI elements if needed:
-    -- hl.FloatBorder = { bg = "#000000" }
-    -- hl.Pmenu = { bg = "#000000" }
-  end,
-})
-      vim.cmd.colorscheme("tokyonight")
+      require("telescope").setup({
+        defaults = {
+          mappings = {
+            i = {
+              ["<C-j>"] = "move_selection_next",
+              ["<C-k>"] = "move_selection_previous",
+            },
+          },
+        },
+      })
     end,
   },
 
-  -- LSP & SERVER MANAGER
-  { "williamboman/mason.nvim", config = true },
-  "williamboman/mason-lspconfig.nvim",
-
-  -- AUTOFORMATTING
+  -----------------------------------------------------------------------
+  -- 🌳 TREESITTER (Syntax Highlighting)
+  -----------------------------------------------------------------------
   {
-    "stevearc/conform.nvim",
-    dependencies = { "williamboman/mason.nvim" },
-    opts = {
-      formatters_by_ft = {
-        java = { "google-java-format" },
-      },
-      format_on_save = {
-        timeout_ms = 500,
-        lsp_fallback = true,
-      },
-    },
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
   },
 
-  -- THE ALL-IN-ONE JAVA PLUGIN
+  -----------------------------------------------------------------------
+  -- 🔄 AUTOPAIRS (Bracket autocomplete)
+  -----------------------------------------------------------------------
   {
-    "nvim-java/nvim-java",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "mfussenegger/nvim-dap",
-    },
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
     config = function()
-      require("java").setup()
-      require("lspconfig").jdtls.setup({})
+      require("nvim-autopairs").setup()
     end,
   },
 
-  -- SNIPPET ENGINE & SNIPPETS COLLECTION
+  -----------------------------------------------------------------------
+  -- 📝 SNIPPETS: LuaSnip + friendly snippets + your custom snippets
+  -----------------------------------------------------------------------
   {
     "L3MON4D3/LuaSnip",
     dependencies = { "rafamadriz/friendly-snippets" },
     config = function()
       require("luasnip.loaders.from_vscode").lazy_load()
-      require("luasnip.loaders.from_lua").load({ paths = vim.fn.stdpath("config") .. "/lua/custom/snippets" })
+      require("luasnip.loaders.from_lua").load({
+        paths = vim.fn.stdpath("config") .. "/lua/custom/snippets",
+      })
     end,
   },
 
-  -- AUTOCOMPLETION ENGINE
+  -----------------------------------------------------------------------
+  -- 📦 TOGGLETERM (Floating Terminal)
+  -----------------------------------------------------------------------
+  {
+    "akinsho/toggleterm.nvim",
+    version = "*",
+    config = function()
+      require("toggleterm").setup({
+        open_mapping = [[<C-\>]],
+        direction = "float",
+        float_opts = { border = "rounded" },
+      })
+    end,
+  },
+
+  -----------------------------------------------------------------------
+  -- 🏁 COMPETITEST (Competitive Programming)
+  -----------------------------------------------------------------------
+  {
+    "xeluxee/competitest.nvim",
+    dependencies = { "MunifTanjim/nui.nvim" },
+    config = function()
+      require("competitest").setup({
+        compile_command = {
+          cpp = {
+            exec = "g++",
+            args = { "-std=c++17", "$(FNAME)", "-O2", "-Wall", "-o", "$(FNOEXT)" },
+          },
+          java = {
+            exec = "/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home/bin/javac",
+            args = { "$(FNAME)" },
+          },
+        },
+        run_command = {
+          cpp = { exec = "./$(FNOEXT)" },
+          java = {
+            exec = "/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home/bin/java",
+            args = { "$(FNOEXT)" },
+          },
+        },
+      })
+    end,
+  },
+
+  -----------------------------------------------------------------------
+  -- 🔥 git-conflict (resolve merge conflicts)
+  -----------------------------------------------------------------------
+  { "akinsho/git-conflict.nvim", version = "*", config = true },
+
+  -----------------------------------------------------------------------
+  -- 🎯 Grapple (Jump between important files)
+  -----------------------------------------------------------------------
+  { "cbochs/grapple.nvim", config = true },
+
+  -----------------------------------------------------------------------
+  -- 💾 Auto-save
+  -----------------------------------------------------------------------
+  { "Pocco81/auto-save.nvim", config = true },
+
+  -----------------------------------------------------------------------
+  -- 💼 Auto-session (restore last session)
+  -----------------------------------------------------------------------
+  {
+    "rmagatti/auto-session",
+    config = function()
+      require("auto-session").setup({
+        auto_session_enabled = true,
+      })
+    end,
+  },
+
+  -----------------------------------------------------------------------
+  -- 🧵 Overseer (task/job runner)
+  -----------------------------------------------------------------------
+  { "stevearc/overseer.nvim", config = true },
+
+  -----------------------------------------------------------------------
+  -- 🍥 Incline (winbar replacement)
+  -----------------------------------------------------------------------
+  {
+    "b0o/incline.nvim",
+    config = function()
+      require("incline").setup()
+    end,
+  },
+
+  -----------------------------------------------------------------------
+  -- 🔧 MASON (Installer for LSP, DAP, Linters, Formatters)
+  -----------------------------------------------------------------------
+  {
+    "williamboman/mason.nvim",
+    config = true,
+  },
+
+  -----------------------------------------------------------------------
+  -- 🔧 Mason-LSPConfig (Auto bridge between Mason & LSPConfig)
+  -----------------------------------------------------------------------
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          "clangd",
+          "jdtls",
+          "pyright",
+          "tsserver",
+        },
+      })
+    end,
+  },
+
+  -----------------------------------------------------------------------
+  -- 🧠 LSPCONFIG (Native LSP)
+  -----------------------------------------------------------------------
+  {
+    "neovim/nvim-lspconfig",
+    config = function()
+      local lsp = require("lspconfig")
+
+      lsp.clangd.setup({})
+      lsp.jdtls.setup({})
+      lsp.pyright.setup({})
+      lsp.tsserver.setup({})
+    end,
+  },
+
+  -----------------------------------------------------------------------
+  -- ⚡ AUTOCOMPLETION (nvim-cmp)
+  -----------------------------------------------------------------------
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
@@ -78,79 +240,29 @@ return {
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
       "hrsh7th/cmp-path",
+      "L3MON4D3/LuaSnip",
       "saadparwaiz1/cmp_luasnip",
     },
     config = function()
       local cmp = require("cmp")
       local luasnip = require("luasnip")
+
       cmp.setup({
         snippet = {
-          expand = function(args)
-            luasnip.lsp_expand(args.body)
-          end,
+          expand = function(args) luasnip.lsp_expand(args.body) end,
         },
         mapping = cmp.mapping.preset.insert({
           ["<C-j>"] = cmp.mapping.select_next_item(),
           ["<C-k>"] = cmp.mapping.select_prev_item(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
-          ["<Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
-          ["<S-Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            elseif luasnip.jumpable(-1) then
-              luasnip.jump(-1)
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
         }),
-        sources = cmp.config.sources({
+        sources = {
           { name = "nvim_lsp" },
           { name = "luasnip" },
           { name = "buffer" },
           { name = "path" },
-        }),
+        },
       })
     end,
   },
-
-  -- CompetiTest.nvim and its dependency (consolidated and configured)
-  {
-    "xeluxee/competitest.nvim",
-    dependencies = { "MunifTanjim/nui.nvim" },
-        config = function()
-      require("competitest").setup({
-        -- Java compile/run commands
-        compile_command = {
-          java = { exec = "/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home/bin/javac", args = { "$(FNAME)" } },
-        },
-        run_command = {
-          java = { exec = "/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home/bin/java", args = { "$(FNOEXT)" } },
-        },
-        -- UI setup
-        runner_ui = {
-          interface = "popup",
-        },
-        -- Testcase handling
-        testcases_use_single_file = false,
-        testcases_input_file_format = "$(FNOEXT)_input$(TCNUM).txt",
-        testcases_output_file_format = "$(FNOEXT)_output$(TCNUM).txt",
-        maximum_time = 5000,
-        -- Competitive Companion integration
-        companion_port = 27121,
-        receive_print_message = true,
-        received_files_extension = "java",
-        -- THIS IS THE FIX: Use the sanitized name for the file
-        received_problems_path = "$(CWD)/$(JAVA_TASK_CLASS).$(FEXT)",
-        open_received_problems = true,
-      })
-    end,  },
 }
